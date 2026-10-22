@@ -1,4 +1,4 @@
-# Builds and tests both apps. Every push to main publishes the installables as a GitHub release.
+# Builds and tests both apps. Every push to main (or a manual run on main) publishes the installables as a GitHub release.
 name: Build
 
 on:
@@ -88,7 +88,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [android, ios]
     runs-on: ubuntu-latest
     permissions:

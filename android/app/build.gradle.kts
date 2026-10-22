@@ -22,8 +22,8 @@ android {
         if (keystore != null) create("release") {
             storeFile = file(keystore)
             storePassword = providers.environmentVariable("TXNBUDDY_KEYSTORE_PASSWORD").get()
-            keyAlias = providers.environmentVariable("TXNBUDDY_KEY_ALIAS").get()
-            keyPassword = providers.environmentVariable("TXNBUDDY_KEY_PASSWORD").get()
+            keyAlias = providers.environmentVariable("TXNBUDDY_KEY_ALIAS").orNull ?: "txnbuddy"
+            keyPassword = providers.environmentVariable("TXNBUDDY_KEY_PASSWORD").orNull ?: storePassword
         }
     }
 

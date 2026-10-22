@@ -66,7 +66,7 @@ Requires JDK 17+ and the Android SDK (API 36).
 ```bash
 cd android
 ./gradlew testDebugUnitTest      # SMS parser vs shared test vectors
-./gradlew assembleRelease        # minified APK, signed with the debug key for sideloading
+./gradlew assembleRelease        # minified APK; debug key unless the release key is set (see CI and releases)
 adb install app/build/outputs/apk/release/app-release.apk
 ```
 
@@ -85,7 +85,16 @@ Debug builds show **Settings → Load demo data** so you can explore the insight
 * **iOS:** the parser check and an unsigned Release build packaged as an `.ipa`.
 * **On `main`:** both files are published as a GitHub release `v1.0.<run>`, with `versionCode` / build number set to the run number.
 
-Android signing uses a stable release key when the repo secrets `TXNBUDDY_KEYSTORE_B64` (base64 of the `.jks`), `TXNBUDDY_KEYSTORE_PASSWORD`, `TXNBUDDY_KEY_ALIAS` and `TXNBUDDY_KEY_PASSWORD` are set. Without them, each build gets a throwaway debug key and won't install over the previous one. The iOS file is unsigned: sign it with your Apple ID using a sideloading tool, or build from Xcode.
+**Android signing.** Release builds are signed with the permanent key when the repo secrets `TXNBUDDY_KEYSTORE_B64` (base64 of the `.jks`), `TXNBUDDY_KEYSTORE_PASSWORD`, `TXNBUDDY_KEY_ALIAS` and `TXNBUDDY_KEY_PASSWORD` are set, as they are for this repo. Every update must be signed with that same key, so keep a backup of the key file and its password. Without the key, builds fall back to the debug key. Certificate SHA-256: `31:5A:2C:58:5B:AF:56:B8:07:CB:E6:47:6A:F6:91:99:AC:4D:F1:91:14:85:B1:AC:B4:7E:E4:7E:26:E3:D5:C3`.
+
+To sign a local build with it (the password lives in the macOS Keychain):
+```bash
+cd android
+TXNBUDDY_KEYSTORE=~/.android/txnbuddy-release.jks \
+TXNBUDDY_KEYSTORE_PASSWORD="$(security find-generic-password -s 'TxnBuddy Android release key' -w)" \
+VERSION_CODE=1000 ./gradlew assembleRelease
+```
+`VERSION_CODE` has to be higher than the installed build's, because Android refuses to install an older version over a newer one. The iOS file is unsigned: sign it with your Apple ID using a sideloading tool, or build from Xcode.
 
 ## Verification status
 
