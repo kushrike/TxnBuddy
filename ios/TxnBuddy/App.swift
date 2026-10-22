@@ -33,6 +33,7 @@ struct RootView: View {
             if p == .active && locked && !prompted { prompted = true; unlock() }
         }
         .task { if locked && !prompted { prompted = true; unlock() } }
+        .task(id: phase) { if phase == .active { await Updater.shared.checkIfDue() } }
     }
 
     private func unlock() {

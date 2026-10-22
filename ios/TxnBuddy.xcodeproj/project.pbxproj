@@ -14,6 +14,7 @@
 		A056EA90072492EAA3E1487C /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E695F33D9DF032221F164E65 /* ActivityView.swift */; };
 		AFEE76FD79E463C5E6BC0434 /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1293E5441ECA3DB970075D24 /* AccountsView.swift */; };
 		B47E5809A0B39CE2D68020FC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67DB5ED1706AA897EFB7B72C /* SettingsView.swift */; };
+		B77BEF1EA94B02FC9C144526 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A9ECC077F0511E810B01136 /* Updater.swift */; };
 		C70E1F49BBADA3F21411EAF7 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571D6B8BB708D6A11C5E6DF6 /* InsightsView.swift */; };
 		D5DF5C1C605EDB751D352B7B /* AI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F386A60A22DB2B44037CB87 /* AI.swift */; };
 		D61820A42C48F9A458303163 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D72903C14AA4070D9EEBFA /* Store.swift */; };
@@ -27,6 +28,7 @@
 		0791AF1B8FB1E51888FF6A6D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0F386A60A22DB2B44037CB87 /* AI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI.swift; sourceTree = "<group>"; };
 		1293E5441ECA3DB970075D24 /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
+		1A9ECC077F0511E810B01136 /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		2BF7152981F00076BA86DB23 /* AddSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSheet.swift; sourceTree = "<group>"; };
 		4A61618BBBF10DC46B3D1A9D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		571D6B8BB708D6A11C5E6DF6 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
@@ -58,6 +60,7 @@
 				010208A8A4DDF9D72C559BE7 /* SMSParser.swift */,
 				67D72903C14AA4070D9EEBFA /* Store.swift */,
 				7FA637617D1DAED87858C886 /* Theme.swift */,
+				1A9ECC077F0511E810B01136 /* Updater.swift */,
 			);
 			path = TxnBuddy;
 			sourceTree = "<group>";
@@ -160,6 +163,7 @@
 				B47E5809A0B39CE2D68020FC /* SettingsView.swift in Sources */,
 				D61820A42C48F9A458303163 /* Store.swift in Sources */,
 				2E17FE91A153560518CF5C4F /* Theme.swift in Sources */,
+				B77BEF1EA94B02FC9C144526 /* Updater.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

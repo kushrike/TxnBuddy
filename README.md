@@ -1,6 +1,6 @@
 # TxnBuddy
 
-A private expense tracker for **Android** and **iOS**. Add expenses in two taps, auto-capture bank SMS, and see daily, weekly, monthly and yearly insights by category. Nothing ever leaves the phone.
+A private expense tracker for **Android** and **iOS**. Add expenses in two taps, auto-capture bank SMS, and see daily, weekly, monthly and yearly insights by category. Your data never leaves the phone.
 
 Two small native apps, SwiftUI and Jetpack Compose, built from one shared spec: [`DESIGN.md`](DESIGN.md). The Android release APK is **3.5 MB**, and the iOS app has zero dependencies.
 
@@ -23,7 +23,7 @@ Two small native apps, SwiftUI and Jetpack Compose, built from one shared spec: 
 
 | | Android | iOS |
 |---|---|---|
-| Network | **No `INTERNET` permission**, so the OS blocks every connection | No networking code, no SDKs |
+| Network | Only for updates: `Updater.kt` downloads the release info and APK from GitHub and sends nothing. CI fails if other code uses the network or the APK's permissions change | Only for update checks: `Updater.swift` reads the latest release info from GitHub and sends nothing. CI fails if other code uses the network |
 | Storage | One JSON file in app-private storage | One JSON file in the app sandbox (Data Protection) |
 | Cloud backup | Disabled (`allowBackup=false`, extraction rules exclude all) | Excluded from iCloud/device backup |
 | SMS | Read from inbox on-device; raw text is never stored, only amount/merchant/account plus a hash for dedupe | Same, via Shortcuts automation or paste |
@@ -31,7 +31,7 @@ Two small native apps, SwiftUI and Jetpack Compose, built from one shared spec: 
 | Screens | `FLAG_SECURE` when App Lock is on | Privacy cover in the app switcher when App Lock is on |
 | Accounts / analytics / ads | None | None |
 
-ML Kit's AI library bundles Google's usage-telemetry pipeline. On Android it can never send anything, because the app has no INTERNET permission, and its upload backend is also removed from the manifest.
+ML Kit's AI library bundles Google's usage-telemetry pipeline. Its upload backend is removed from the Android manifest, so its events are dropped on the phone instead of sent.
 
 Backups are files *you* export (JSON). The format is the same on both platforms, so a backup made on Android restores on iOS and the other way round.
 
@@ -47,6 +47,12 @@ Parsing is a deterministic rule engine (amount, debit/credit, account last 4, me
 **Learns from you, on every phone.** When you pick or change a category, TxnBuddy remembers it for that merchant, and "Starbucks" also covers "Starbucks Coffee". Change one and it offers to fix the rest ("Apply to 6 more"). For merchants it hasn't seen, a small classifier trained only on your own past transactions makes a guess. Typing a note in the Add sheet picks the category the same way. It's a few hundred lines of code with no model to download, and what it learns stays in your data file (Settings → On-device AI → Learned from you shows the count and can forget it).
 
 **On-device AI setup.** Settings → On-device AI shows why the model isn't available and what to do: turn on Apple Intelligence, wait for the download, update Android AICore, download Gemini Nano, or a note that the phone isn't supported. On Android, Gemini Nano for apps currently runs on Pixel 9 and newer, the Galaxy S26 series, Galaxy Z Fold7/Fold8/Flip8/TriFold, and some other recent flagships ([device list](https://developers.google.com/ml-kit/genai)).
+
+## Updates
+
+**Settings → Updates → Check for updates** asks GitHub for the latest release; **Check automatically** (off by default) does it once a day when the app opens.
+* **Android:** tap **Install**. The app downloads the APK and Android shows its "Update this app?" dialog. The first time, Android asks you to allow TxnBuddy to install apps. Android only accepts an APK signed with the same key as the installed app, so a tampered download can't replace it. Play Protect may offer to scan the new version first.
+* **iOS:** the app tells you a new version is out and links to the release. iOS doesn't let an app install itself, so install it with Xcode or a sideloading tool.
 
 ## Project layout
 
@@ -81,8 +87,8 @@ Debug builds show **Settings → Load demo data** so you can explore the insight
 
 ### CI and releases
 [`.github/workflows/build.yml`](.github/workflows/build.yml) runs on every pull request and push to `main`:
-* **Android:** unit tests (parser vectors + learning), a minified release build, and a check that the APK requests no network permission.
-* **iOS:** the parser check and an unsigned Release build packaged as an `.ipa`.
+* **Android:** unit tests (parser vectors + learning), a minified release build, a check that the APK requests exactly the expected permissions, and a check that only `Updater.kt` uses the network.
+* **iOS:** the parser check, a check that only `Updater.swift` uses the network, and an unsigned Release build packaged as an `.ipa`.
 * **On `main`:** both files are published as a GitHub release `v1.0.<run>`, with `versionCode` / build number set to the run number.
 
 **Android signing.** Release builds are signed with the permanent key when the repo secrets `TXNBUDDY_KEYSTORE_B64` (base64 of the `.jks`), `TXNBUDDY_KEYSTORE_PASSWORD`, `TXNBUDDY_KEY_ALIAS` and `TXNBUDDY_KEY_PASSWORD` are set, as they are for this repo. Every update must be signed with that same key, so keep a backup of the key file and its password. Without the key, builds fall back to the debug key. Certificate SHA-256: `31:5A:2C:58:5B:AF:56:B8:07:CB:E6:47:6A:F6:91:99:AC:4D:F1:91:14:85:B1:AC:B4:7E:E4:7E:26:E3:D5:C3`.
@@ -94,9 +100,9 @@ TXNBUDDY_KEYSTORE=~/.android/txnbuddy-release.jks \
 TXNBUDDY_KEYSTORE_PASSWORD="$(security find-generic-password -s 'TxnBuddy Android release key' -w)" \
 VERSION_CODE=1000 ./gradlew assembleRelease
 ```
-`VERSION_CODE` has to be higher than the installed build's, because Android refuses to install an older version over a newer one. The iOS file is unsigned: sign it with your Apple ID using a sideloading tool, or build from Xcode.
+`VERSION_CODE` has to be higher than the installed build's, because Android refuses to install an older version over a newer one. In-app updates only offer a release with a higher number than the installed build, so a local build at 1000 gets no update offers until release 1001. The iOS file is unsigned: sign it with your Apple ID using a sideloading tool, or build from Xcode.
 
 ## Verification status
 
-* **Android:** parser tests pass (26 vectors). Debug and release builds succeed, and the release APK's permissions are only `READ_SMS`, `USE_BIOMETRIC` and AICore bind. Tested end to end on an API 36 emulator: real injected SMS → review → import, auto-import with Undo, add/edit/delete, insights, app lock (PIN), backup → erase → restore, dark mode. Gemini Nano and fingerprint unlock still need a real phone (Pixel 9+ / Galaxy S25 class for Nano).
-* **iOS:** parser check passes (26 vectors). Built with Xcode 27 for device and simulator with zero warnings, and the static analyzer is clean. The release app is 3.9 MB, and the "Log Bank SMS" Shortcuts action is registered in the app's metadata. Tested in the iOS 27 simulator (iPhone 18 Pro): onboarding, add expense via keypad, all Insights periods, paste → SMS review → import, Shortcuts guide, dark mode, and Face ID App Lock (enable, relaunch locked, unlock). The data folder is confirmed excluded from backups and stores no SMS text. Running the Shortcuts automation on a real Message, and Foundation Models output (the dev Mac's Apple Intelligence model wasn't downloaded, so the app correctly fell back to rule-based categories), still need a device.
+* **Android:** parser tests pass (26 vectors). Debug and release builds succeed, and the release APK's permissions are only `READ_SMS`, `USE_BIOMETRIC`, AICore bind, and `INTERNET` + `REQUEST_INSTALL_PACKAGES` for updates. Tested end to end on an API 36 emulator: real injected SMS → review → import, auto-import with Undo, add/edit/delete, insights, app lock (PIN), backup → erase → restore, dark mode, and an in-app update from a 1.0.1 build to the real v1.0.2 release (install permission prompt, download progress, Android's update dialog, Play Protect scan prompt, the daily check's toast; data kept). Gemini Nano and fingerprint unlock still need a real phone (Pixel 9+ / Galaxy S25 class for Nano).
+* **iOS:** parser check passes (26 vectors). Built with Xcode 27 for device and simulator with zero warnings, and the static analyzer is clean. The release app is 3.9 MB, and the "Log Bank SMS" Shortcuts action is registered in the app's metadata. Tested in the iOS 27 simulator (iPhone 18 Pro): onboarding, add expense via keypad, all Insights periods, paste → SMS review → import, Shortcuts guide, dark mode, and Face ID App Lock (enable, relaunch locked, unlock), and the update check finding v1.0.2. The data folder is confirmed excluded from backups and stores no SMS text. Running the Shortcuts automation on a real Message, and Foundation Models output (the dev Mac's Apple Intelligence model wasn't downloaded, so the app correctly fell back to rule-based categories), still need a device.

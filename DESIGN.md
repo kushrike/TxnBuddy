@@ -9,7 +9,7 @@ Main goals, in order: **privacy**, **UI that is quick to use**, **lightweight**.
 
 | Rule | iOS | Android |
 |---|---|---|
-| No network | No networking code at all (no URLSession, no SDKs) | **No `INTERNET` permission** in the merged manifest (`tools:node="remove"` for INTERNET + ACCESS_NETWORK_STATE coming from libraries) |
+| Network only for updates | `Updater.swift` is the only file with networking code (CI greps for it). It GETs the latest GitHub release info with an ephemeral session and a fixed User-Agent; nothing from the app is sent | `INTERNET` is used only by `Updater.kt` (CI greps for it, and checks the APK's permissions against an exact list). It GETs the release info and the APK, nothing is sent. ML Kit's telemetry upload backend is removed from the manifest, and `ACCESS_NETWORK_STATE` stays removed |
 | No cloud backup | Store file `isExcludedFromBackup = true` | `allowBackup="false"`, `dataExtractionRules`/`fullBackupContent` exclude everything |
 | Data at rest | App sandbox + Data Protection (default class) | App-private storage (device FBE) |
 | SMS | Raw SMS body is **never stored**; only extracted fields + an FNV hash for dedupe | same |
@@ -192,7 +192,7 @@ Title "Activity" · search (matches note, category name, account name, identifie
 Expenses only for chart/donut. Income shown in the summary.
 
 ### 4.6 Settings
-1. **Privacy card** (accentSoft bg): 🛡️ badge · "Private by design" · "Your money data never leaves this device." · checks: ✓ Stored only on this device ✓ On-device AI ✓ No internet access (Android) / No network code (iOS) ✓ Not in cloud backups.
+1. **Privacy card** (accentSoft bg): 🛡️ badge · "Private by design" · "Your money data never leaves this device." · checks: ✓ Stored only on this device ✓ On-device AI ✓ Internet only for app updates (Android) / Internet only for update checks (iOS) ✓ Not in cloud backups.
 2. **Security**: App Lock (Face ID / Touch ID / passcode, or fingerprint / screen lock) toggle · Hide amounts toggle.
 3. **SMS**:
    * Android: "Read bank SMS" (permission state, tap to grant) · "Scan inbox now" · "Auto-add new SMS on open" toggle (default on) · caption "Last scanned 5 min ago".
@@ -201,8 +201,9 @@ Expenses only for chart/donut. Income shown in the summary.
 5. **Budget & currency**: Monthly budget (opens amount entry) · Currency picker (INR USD EUR GBP AED SGD AUD CAD JPY).
 6. **Accounts** → Accounts screen (§4.10); trailing = number of accounts, plus an accent dot when unlinked sources exist. **Categories** → manager (list; add/edit sheet with emoji field, name, colour swatches, kind; built-ins non-deletable).
 7. **Data**: Export CSV · Back up (JSON file) · Restore from backup (confirm: replaces everything) · Erase all data (destructive confirm).
-8. Footer: version · "No analytics. No ads. No account."
-9. DEBUG builds only: "Load demo data" (≈120 realistic transactions across 3 months).
+8. **Updates** (§4.14): "Check for updates" row (subtitle = version or the last result) · "Check automatically" toggle (default **off**: "Once a day, when you open the app") · caption naming github.com/kushrike/TxnBuddy and "none of your data is sent".
+9. Footer: version · "No analytics. No ads. No account."
+10. DEBUG builds only: "Load demo data" (≈120 realistic transactions across 3 months).
 
 ### 4.7 SMS Review sheet
 Title "Found 12 transactions" · caption "Parsed on this device. Nothing was uploaded." · list rows with a checkbox (default checked) + transaction row; tapping the badge cycles/opens a category menu · bottom button "Add 12 transactions" (count follows selection). Also used for the iOS paste flow.
@@ -258,6 +259,12 @@ Header: AI status badge + one-line status. Then a numbered checklist that depend
     3. **Stay on Wi‑Fi and restart the phone.** "After an update AICore fetches its settings in the background. This can take a few minutes to a few hours; a restart speeds it up."
     4. **Install system updates** (Settings → Software update).
     5. Phones with an unlocked bootloader or root aren't supported.
+
+### 4.14 Updates
+Source: the public GitHub release `latest` (`api.github.com/repos/kushrike/TxnBuddy/releases/latest`). Tag `v1.0.<N>` where N is the CI run number = Android `versionCode` = iOS `CFBundleVersion`; a release is newer when its N is higher.
+* **Android** installs in-app. Row states: "Check for updates" → "You're on the latest version" / "Couldn't reach GitHub", or "Update to 1.0.N" with trailing **Install** → "Downloading… 42%" → Android's own "Update this app?" dialog (PackageInstaller session). First time only, Install opens the system "Install unknown apps" page for TxnBuddy and continues by itself when the user comes back. Android rejects an APK not signed with the app's key, so the download needs no extra verification. Errors: signature mismatch → "This copy is signed with a different key. Back up, uninstall, and install the release once."
+* **iOS** can't install itself: when newer, the row becomes "TxnBuddy 1.0.N is out · Open the release page" (link).
+* Auto check (toggle on): once per 24 h on app open; if newer, toast "TxnBuddy 1.0.N is available" with **Update** (Android: starts the install, toast "Downloading TxnBuddy 1.0.N…" when not on Settings) / **View** (iOS: opens the release page).
 
 ### App icon
 Master: `shared/icon.svg` (128-unit artboard). After changing it:

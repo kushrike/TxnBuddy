@@ -94,6 +94,14 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         Nav.smsGranted = SmsImport.granted(this)
         if (!Nav.locked) lifecycleScope.launch { SmsImport.autoScan(this@MainActivity) }
+        if (Updater.resumeInstall && packageManager.canRequestPackageInstalls()) lifecycleScope.launch { Updater.install(this@MainActivity) }
+        if (Store.autoUpdate && System.currentTimeMillis() - Store.lastUpdateCheck > 86_400_000) lifecycleScope.launch {
+            Updater.check()?.let { r ->
+                Nav.snack = Snack("TxnBuddy ${r.version} is available", "Update") {
+                    lifecycleScope.launch { Updater.install(this@MainActivity) }
+                }
+            }
+        }
     }
 
     override fun onStop() {
@@ -155,8 +163,8 @@ private fun Shell(activity: MainActivity) {
     LaunchedEffect(Nav.snack) {
         val s = Nav.snack ?: return@LaunchedEffect
         val r = snackbar.showSnackbar(s.text, s.action, withDismissAction = false, duration = if (s.action != null) SnackbarDuration.Long else SnackbarDuration.Short)
+        Nav.snack = null // first, so an action can show a follow-up snack
         if (r == SnackbarResult.ActionPerformed) s.onAction()
-        Nav.snack = null
     }
     BackHandler(Nav.screen != null) { Nav.screen = null }
     BackHandler(Nav.screen == null && Nav.tab != 0) { Nav.tab = 0 }
@@ -276,7 +284,7 @@ private fun Welcome(activity: MainActivity) {
             Spacer(Modifier.height(10.dp))
             Text(
                 "TxnBuddy reads your bank messages on this phone to find debits and credits. " +
-                    "The app has no internet access, so messages can't leave your device. Only amounts, " +
+                    "Messages never leave your device. Only amounts, " +
                     "merchants and dates are kept — never the message itself.",
                 fontSize = 15.sp, color = P.muted, textAlign = TextAlign.Center, lineHeight = 22.sp,
             )

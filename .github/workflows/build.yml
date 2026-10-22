@@ -45,12 +45,17 @@ jobs:
       - name: Test and build
         run: ./gradlew testDebugUnitTest assembleRelease
 
-      - name: Privacy check (no network permission)
+      # INTERNET is only for in-app updates. A new permission has to be added to this list on purpose.
+      - name: Privacy check (permissions, network code)
         run: |
           aapt2="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2"
-          "$aapt2" dump permissions app/build/outputs/apk/release/app-release.apk | tee perms.txt
-          if grep -qE "android.permission.(INTERNET|ACCESS_NETWORK_STATE)" perms.txt; then
-            echo "::error::The release APK must not request network access"; exit 1
+          "$aapt2" dump permissions app/build/outputs/apk/release/app-release.apk | sed -n "s/^uses-permission: name='\(.*\)'.*/\1/p" | sort > perms.txt
+          printf '%s\n' android.permission.INTERNET android.permission.READ_SMS android.permission.REQUEST_INSTALL_PACKAGES \
+            android.permission.USE_BIOMETRIC com.google.android.apps.aicore.service.BIND_SERVICE \
+            com.kushrike.txnbuddy.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION | sort | diff - perms.txt \
+            || { echo "::error::The APK's permissions changed"; exit 1; }
+          if grep -rlE 'java\.net|javax\.net|okhttp|WebView|DownloadManager' app/src/main | grep -v '/Updater.kt$'; then
+            echo "::error::Only Updater.kt may use the network"; exit 1
           fi
 
       - run: mv app/build/outputs/apk/release/app-release.apk "TxnBuddy-1.0.$VERSION_CODE.apk"
@@ -67,6 +72,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: xcodebuild -version
+
+      - name: Privacy check (network code)
+        run: |
+          if grep -rlE 'URLSession|URLRequest|NWConnection|import Network|WKWebView|SFSafariViewController' ios/TxnBuddy | grep -v '/Updater.swift$'; then
+            echo "::error::Only Updater.swift may use the network"; exit 1
+          fi
 
       - name: SMS parser check
         run: swiftc -O ios/TxnBuddy/SMSParser.swift ios/Tests/ParserCheck.swift -o "$RUNNER_TEMP/pc" && "$RUNNER_TEMP/pc" shared/sms-samples.tsv
@@ -107,12 +118,12 @@ jobs:
           {
             echo "Built from ${{ github.sha }}."
             echo
-            echo "**Android:** \`TxnBuddy-$v.apk\`. Install it over USB with \`adb install -r TxnBuddy-$v.apk\`; Play Protect blocks SMS apps installed from a browser or chat app."
+            echo "**Android:** \`TxnBuddy-$v.apk\`. If you have TxnBuddy 1.0.3 or later, update from Settings → Updates. Otherwise install it over USB with \`adb install -r TxnBuddy-$v.apk\`; Play Protect blocks SMS apps installed from a browser or chat app."
             if [ "$KEY" = debug ]; then
               echo "This build is signed with a throwaway key, so uninstall the previous one first (back up in Settings)."
             fi
             echo
-            echo "**iOS:** \`TxnBuddy-$v-unsigned.ipa\` is unsigned. Sign and install it with your Apple ID using a sideloading tool such as Sideloadly or AltStore, or build from Xcode."
+            echo "**iOS:** \`TxnBuddy-$v-unsigned.ipa\` is unsigned. Sign and install it with your Apple ID using a sideloading tool such as Sideloadly or AltStore, or build from Xcode. The app can tell you an update exists, but iOS doesn't let it install one."
           } > notes.md
           gh release create "v$v" TxnBuddy-* --repo "${{ github.repository }}" --target "${{ github.sha }}" \
             --title "TxnBuddy $v" --notes-file notes.md

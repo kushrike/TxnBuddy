@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("appLock") private var appLock = false
     @AppStorage("hideAmounts") private var hide = false
     @AppStorage("smartAI") private var smartAI = true
+    @AppStorage("autoUpdate") private var autoUpdate = false
     @State private var importing = false
     @State private var pendingRestore: Backup?
     @State private var confirmErase = false
@@ -112,6 +113,31 @@ struct SettingsView: View {
                     Text("Data")
                 } footer: {
                     Text("Backups are a file you keep. They work with TxnBuddy on Android too.")
+                }
+
+                Section {
+                    let u = Updater.shared
+                    if let r = u.latest {
+                        Link(destination: r.html_url) {
+                            RowLabel(title: "TxnBuddy \(r.version) is out", caption: "Open the release page", symbol: "arrow.down.circle.fill", color: .blue)
+                        }
+                    } else {
+                        Button { Task { await u.check() } } label: {
+                            LabeledContent {
+                                if u.busy { ProgressView() }
+                            } label: {
+                                RowLabel(title: "Check for updates", caption: u.status, symbol: "arrow.triangle.2.circlepath", color: .blue)
+                            }
+                        }
+                        .disabled(u.busy)
+                    }
+                    Toggle(isOn: $autoUpdate) {
+                        RowLabel(title: "Check automatically", caption: "Once a day, when you open the app", symbol: "clock.arrow.circlepath", color: .purple)
+                    }
+                } header: {
+                    Text("Updates")
+                } footer: {
+                    Text("Asks github.com/kushrike/TxnBuddy for the latest version; none of your data is sent. iOS doesn't let apps install themselves, so install the new version with Xcode or a sideloading tool.")
                 }
 
                 #if DEBUG
@@ -228,7 +254,7 @@ private struct PrivacyCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 check("Stored only on this iPhone")
                 check("On-device AI")
-                check("No network code")
+                check("Internet only for update checks")
                 check("Not in iCloud backups")
             }
         }

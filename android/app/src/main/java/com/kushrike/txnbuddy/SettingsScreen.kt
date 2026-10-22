@@ -54,7 +54,9 @@ import androidx.compose.material.icons.rounded.Savings
 import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material.icons.rounded.Sms
 import androidx.compose.material.icons.rounded.Sync
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -236,6 +238,24 @@ fun SettingsScreen(activity: MainActivity) {
             }
         }
 
+        item {
+            Group("Updates") {
+                val r = Updater.latest
+                Row_(
+                    Icons.Rounded.SystemUpdate, Color(0xFF3B82F6), if (r != null) "Update to ${r.version}" else "Check for updates",
+                    Updater.progress?.let { "Downloading… ${(it * 100).toInt()}%" } ?: Updater.status ?: "Version ${BuildConfig.VERSION_NAME}",
+                    onClick = if (Updater.busy) null else ({ scope.launch { if (r != null) Updater.install(activity) else Updater.check() } }),
+                ) {
+                    if (Updater.busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = P.accent)
+                    else if (r != null) Text("Install", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = P.accent)
+                    else Chevron()
+                }
+                Divider()
+                ToggleRow(Icons.Rounded.Update, Color(0xFF8B5CF6), "Check automatically", "Once a day, when you open the app", Store.autoUpdate) { Store.autoUpdate = it }
+            }
+            Caption("Downloads new versions from github.com/kushrike/TxnBuddy. Only the version is asked for; none of your data is sent. Android installs an update only if it's signed with the same key as this app.")
+        }
+
         if (BuildConfig.DEBUG) item {
             Group("Debug") {
                 Row_(Icons.Rounded.Science, Color(0xFF9CA3AF), "Load demo data", "≈120 sample transactions", onClick = {
@@ -301,7 +321,7 @@ private fun PrivacyCard() {
             }
         }
         Spacer(Modifier.height(14.dp))
-        listOf("Stored only on this device", "On-device AI", "No internet access", "Not in cloud backups").forEach {
+        listOf("Stored only on this device", "On-device AI", "Internet only for app updates", "Not in cloud backups").forEach {
             Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.Check, null, tint = P.accent, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -598,7 +618,7 @@ fun AiSetupScreen(activity: MainActivity) {
                             Text("${gb(Ai.downloaded)} of ${gb(Ai.total)} GB", style = num(14.sp, FontWeight.Medium), color = P.muted)
                         } else StepText("Downloading in the background. Keep the phone on Wi‑Fi.")
                         Spacer(Modifier.height(10.dp))
-                        StepText("AICore downloads it, not TxnBuddy (this app has no internet access). Use Wi‑Fi.")
+                        StepText("AICore downloads it, not TxnBuddy. Use Wi‑Fi.")
                     }
                 }
             }

@@ -18,7 +18,7 @@ import org.json.JSONObject
 import java.math.BigDecimal
 
 /**
- * Gemini Nano through ML Kit GenAI (AICore). Runs entirely on-device; this app has no INTERNET permission.
+ * Gemini Nano through ML Kit GenAI (AICore). Runs entirely on-device; AICore, not this app, downloads the model.
  * Optional: every call degrades to null when the model is missing, so the regex parser stays the primary path.
  */
 object Ai {

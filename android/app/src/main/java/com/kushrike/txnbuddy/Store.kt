@@ -108,6 +108,8 @@ object Store {
     var lastIncomeCat by Pref("lastIncomeCat", "salary")
     var lastAccountId by Pref("lastAccountId", "")
     var dismissedSources by Pref("dismissedSources", emptySet<String>())
+    var autoUpdate by Pref("autoUpdate", false)
+    var lastUpdateCheck by Pref("lastUpdateCheck", 0L)
 
     private lateinit var file: File
     internal lateinit var prefs: SharedPreferences
