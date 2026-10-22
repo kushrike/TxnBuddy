@@ -1,0 +1,27 @@
+sender	type	amount	account	merchant	category	date	body
+VM-HDFCBK	debit	250.00	4521	Swiggy	food	2026-10-12	Sent Rs.250.00 From HDFC Bank A/C *4521 To SWIGGY On 12/10/26 Ref 628512345678 Not You? Call 18002586161/SMS BLOCK UPI to 7308080808
+AD-ICICIB	debit	1499.00	123	Amazon Pay	shopping	2026-10-11	ICICI Bank Acct XX123 debited for Rs 1,499.00 on 11-Oct-26; AMAZON PAY credited. UPI:628512345679. Call 18002662 for dispute. SMS BLOCK 123 to 9215676766.
+JD-SBIUPI	debit	120.00	9876	Rapido	transport	2026-10-12	Dear UPI user A/C X9876 debited by 120.0 on date 12Oct26 trf to RAPIDO Refno 628512345680. If not u? call 1800111109. -SBI
+VK-SBIUPI	credit	500.00	9876	-	otherIncome	2026-10-12	Dear SBI UPI User, ur A/cX9876 credited by Rs500 on 12Oct26 by (Ref no 628512345681)
+AX-AXISBK	debit	649.00	7788	-	food	2026-10-12	Spent INR 649.00 Axis Bank Card no. XX7788 12-10-26 19:45:12 IST ZOMATO Avl Limit: INR 1,20,000.50 Not you? SMS BLOCK 7788 to 919951860002
+VM-HDFCBK	debit	2340.50	4433	Uber India	transport	2026-10-11	Rs.2,340.50 spent on HDFC Bank Card x4433 at UBER INDIA on 2026-10-11:21:15:01.Avl bal Rs.45,000.00.Not you?Call 18002586161
+VM-KOTAKB	debit	3000.00	8899	Rent Landlord	home	2026-10-10	Rs 3000.00 debited from a/c **8899 on 10-10-2026 to VPA rent.landlord@okhdfcbank (UPI Ref No 628512345682). Not you, https://kotak.com/fraud
+JM-PAYTMB	debit	85.00	-	Chai Point	food	-	Paid Rs.85 to Chai Point via Paytm UPI. UPI Ref: 628512345683. Updated balance: Rs 1,203.40
+VM-HDFCBK	credit	85000.00	1234	-	salary	2026-10-01	Your A/c XX1234 is credited with INR 85,000.00 on 01-10-2026 by NEFT-ACME TECHNOLOGIES PVT LTD-SALARY OCT. Avl Bal INR 1,02,345.00
+AD-HDFCBK	credit	499.00	5566	-	refund	2026-10-09	Refund of Rs 499.00 for your Myntra order has been credited to your A/c XX5566 on 09-10-26.
+BZ-SBIINB	debit	2000.00	1234	Atm	transfer	2026-10-12	Rs.2000 withdrawn from A/c XX1234 at ATM on 12Oct. Avl Bal: Rs.10,500
+VM-AXISBK	credit	1200.00	3344	Rahul Sharma	otherIncome	2026-10-11	Rs.1,200.00 credited to your A/c XX3344 by VPA rahul.sharma@oksbi on 11-10-26 (UPI Ref No 628512345684)
+VM-IDFCFB	credit	750.00	-	Priya Verma	otherIncome	-	You have received Rs. 750 from Priya Verma on your UPI ID. Ref 628512345685
+VM-HDFCBK	debit	634.00	4521	Swiggyinstamart	groceries	2026-10-12	Sent Rs.634.00 From HDFC Bank A/C *4521 To swiggyinstamart@icici On 12/10/26 Ref 628512345686 Not You? Call 18002586161/SMS BLOCK UPI to 7308080808
+AD-PAYTMB	credit	25.00	-	-	refund	-	Cashback of Rs.25 has been credited to your Paytm Wallet. Keep shopping!
+AD-SBICRD	debit	1250.00	9012	Dmart	groceries	2026-10-08	Your SBI Debit Card ending 9012 has been used for a purchase of Rs 1250.00 at DMART on 08-10-26.
+VM-ICICIB	debit	899.00	4433	Bookmyshow	entertainment	2026-10-12	INR 899.00 spent using ICICI Bank Card XX4433 on 12-Oct-26 on BOOKMYSHOW. Avl Limit: INR 2,34,567.00. If not you, call 1800 2662/SMS BLOCK 4433 to 9215676766
+VM-HDFCBK	debit	1180.00	4521	Bescom	bills	2026-10-05	Rs 1,180.00 paid towards BESCOM from A/c XX4521 on 05-10-2026 via BBPS. Ref BB0123456.
+24273	debit	45.67	-	Starbucks #1234	food	2026-10-12	Chase: You made a $45.67 transaction with STARBUCKS #1234 on Oct 12, 2026 at 7:45 AM ET.
+VM-HDFCBK	none	-	-	-	-	-	123456 is your OTP for txn of Rs 2,500.00 at AMAZON on card XX4433. Valid for 10 mins. Do not share.
+BP-LOANS	none	-	-	-	-	-	Get pre-approved personal loan up to Rs 5,00,000 at 10.5% p.a. Apply now: https://bit.ly/x
+VM-HDFCBK	none	-	-	-	-	-	Payment of Rs 4,520.00 is due on your HDFC Credit Card XX4433 by 15-10-2026. Pay now to avoid charges.
+VM-ICICIB	none	-	-	-	-	-	Your Netflix subscription of Rs 649 will be debited on 15-10-26 via UPI Autopay.
+VM-HDFCBK	none	-	-	-	-	-	Your transaction of Rs 300.00 at ZOMATO has failed. Amount if debited will be refunded.
++919876543210	none	-	-	-	-	-	Bro I paid Rs 500 for dinner, send me your share
+VM-HDFCBK	none	-	-	-	-	-	Dear Customer, your HDFC Bank NetBanking password was changed successfully. Not you? Call 18002586161

@@ -1,0 +1,118 @@
+# Builds and tests both apps. Every push to main publishes the installables as a GitHub release.
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+      # Optional stable release key. Without it the APK is signed with a throwaway debug key.
+      KEYSTORE_B64: ${{ secrets.TXNBUDDY_KEYSTORE_B64 }}
+      TXNBUDDY_KEYSTORE_PASSWORD: ${{ secrets.TXNBUDDY_KEYSTORE_PASSWORD }}
+      TXNBUDDY_KEY_ALIAS: ${{ secrets.TXNBUDDY_KEY_ALIAS }}
+      TXNBUDDY_KEY_PASSWORD: ${{ secrets.TXNBUDDY_KEY_PASSWORD }}
+    outputs:
+      key: ${{ steps.key.outputs.key || 'debug' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Release key
+        id: key
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "TXNBUDDY_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          echo "key=release" >> "$GITHUB_OUTPUT"
+
+      - name: Test and build
+        run: ./gradlew testDebugUnitTest assembleRelease
+
+      - name: Privacy check (no network permission)
+        run: |
+          aapt2="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2"
+          "$aapt2" dump permissions app/build/outputs/apk/release/app-release.apk | tee perms.txt
+          if grep -qE "android.permission.(INTERNET|ACCESS_NETWORK_STATE)" perms.txt; then
+            echo "::error::The release APK must not request network access"; exit 1
+          fi
+
+      - run: mv app/build/outputs/apk/release/app-release.apk "TxnBuddy-1.0.$VERSION_CODE.apk"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android
+          path: android/TxnBuddy-*.apk
+          if-no-files-found: error
+
+  ios:
+    runs-on: macos-latest
+    env:
+      BUILD: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: xcodebuild -version
+
+      - name: SMS parser check
+        run: swiftc -O ios/TxnBuddy/SMSParser.swift ios/Tests/ParserCheck.swift -o "$RUNNER_TEMP/pc" && "$RUNNER_TEMP/pc" shared/sms-samples.tsv
+
+      # ponytail: unsigned. Signing needs an Apple Developer certificate; sideloading tools re-sign it with your Apple ID.
+      - name: Build unsigned IPA
+        run: |
+          xcodebuild -project ios/TxnBuddy.xcodeproj -scheme TxnBuddy -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION="$BUILD" MARKETING_VERSION="1.0.$BUILD" build
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$RUNNER_TEMP/dd/Build/Products/Release-iphoneos/TxnBuddy.app" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$GITHUB_WORKSPACE/TxnBuddy-1.0.$BUILD-unsigned.ipa" Payload)
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios
+          path: TxnBuddy-*-unsigned.ipa
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          merge-multiple: true
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEY: ${{ needs.android.outputs.key }}
+        run: |
+          v="1.0.${{ github.run_number }}"
+          {
+            echo "Built from ${{ github.sha }}."
+            echo
+            echo "**Android:** \`TxnBuddy-$v.apk\`. Install it over USB with \`adb install -r TxnBuddy-$v.apk\`; Play Protect blocks SMS apps installed from a browser or chat app."
+            if [ "$KEY" = debug ]; then
+              echo "This build is signed with a throwaway key, so uninstall the previous one first (back up in Settings)."
+            fi
+            echo
+            echo "**iOS:** \`TxnBuddy-$v-unsigned.ipa\` is unsigned. Sign and install it with your Apple ID using a sideloading tool such as Sideloadly or AltStore, or build from Xcode."
+          } > notes.md
+          gh release create "v$v" TxnBuddy-* --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+            --title "TxnBuddy $v" --notes-file notes.md
